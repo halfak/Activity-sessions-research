@@ -97,15 +97,16 @@ ifor = function(x, ifval, orval){
 }
 
 ifna = function(x, then){
-	sapply(
-		x,
-		function(xval){
+	mapply(
+		function(xval, thenval){
 			if(is.na(xval)){
-				then
+				thenval
 			}else{
 				xval
 			}
-		}
+		},
+		x,
+		then
 	)
 	
 }

@@ -31,7 +31,12 @@ def read_user_actions(f, format):
         else:
             timestamp = Timestamp.strptime(parts[1], format)
         
-        yield user, timestamp
+        if len(parts) >= 3:
+            action = parts[2]
+        else:
+            action = None
+        
+        yield user, timestamp, action
     
 
 def main():
@@ -51,17 +56,17 @@ def run(f, format):
         
         sys.stderr.write("Processing {0}: ".format(user))
         
-        for _, timestamp in actions:
+        for _, timestamp, action in actions:
             
             if last_action is not None:
                 print(
                     "{0}\t{1}".format(
                         user.replace("\t", "\\t").replace("\n", "\\n"),
-                        timestamp - last_action
+                        timestamp - last_action[0]
                     )
                 )
             
             sys.stderr.write(".")
-            last_action = timestamp
+            last_action = (timestamp, action)
         
         sys.stderr.write("\n")
