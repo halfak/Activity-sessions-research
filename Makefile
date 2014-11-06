@@ -223,3 +223,40 @@ datasets/osm_change_intertime.sample.tsv: \
 	 bzcat datasets/osm_change_intertime.tsv.bz2 |  \
 	 tail -n+2 | sed -r "s/(.+)/\1\tchange/"  | shuf -n 500000 ) > \
 	datasets/osm_change_intertime.sample.tsv
+
+#datasets/originals/osm_change.sorted.collapsed.tsv.bz2: \
+#		datasets/originals/osm_change.sorted.tsv.bz2
+#	bzcat datasets/originals/osm_change.sorted.tsv.bz2 | \
+#	tail -n+2 | \
+#	python sessions/last_osm_change --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+#	bzip2 -c > \
+#	datasets/originals/osm_change.sorted.collapsed.tsv.bz2
+
+datasets/osm_changeset_intertime.tsv.bz2: \
+		datasets/originals/osm_changeset.sorted.tsv.bz2
+	bzcat datasets/originals/osm_changeset.sorted.tsv.bz2 | tail -n+2 | \
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | bzip2 -c > \
+	datasets/osm_changeset_intertime.tsv.bz2
+
+datasets/osm_changeset_intertime.sample.tsv: \
+	datasets/osm_changeset_intertime.tsv.bz2
+	(echo "user_id\tintertime\ttype"; \
+	 bzcat datasets/osm_changeset_intertime.tsv.bz2 |  \
+	 tail -n+2 | sed -r "s/(.+)/\1\tchange_set/"  | shuf -n 500000 ) > \
+	 datasets/osm_changeset_intertime.sample.tsv
+
+############################ Cyclopath #########################################
+
+#Not sampled
+datasets/cyclopath_select_intertime.tsv: \
+		datasets/originals/cyclopath_select.tsv.bz2
+	bzcat datasets/originals/cyclopath_select.tsv.bz2 | \
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" > \
+	datasets/cyclopath_select_intertime.tsv
+
+# Not sampled
+datasets/cyclopath_route_get_intertime.tsv: \
+		datasets/originals/cyclopath_route_get.tsv.bz2
+	bzcat datasets/originals/cyclopath_route_get.tsv.bz2 | \
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" > \
+	datasets/cyclopath_route_get_intertime.tsv
