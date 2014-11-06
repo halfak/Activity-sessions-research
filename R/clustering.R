@@ -6,7 +6,7 @@ cluster_init = list(
     short_within = list(
         color = "deepskyblue1",
         lambda = .55,
-        mu = 3,
+        mu = 2,
         sigma = 2
     ),
     long_within = list(
@@ -103,8 +103,11 @@ plot_frequencies = function(intertimes){
     theme_bw()
 }
 
-plot_clusters = function(intertimes, clusters=c("within", "between")){
-    fit = fit_intertimes(intertimes, clusters)
+plot_clusters = function(intertimes, clusters=c("within", "between"), fit=NULL){
+    intertimes = intertimes[intertimes > 0]
+    if(is.null(fit)){
+        fit = fit_intertimes(intertimes, clusters)
+    }
     
     g = plot_frequencies(intertimes)
     
@@ -167,13 +170,16 @@ plot_clusters = function(intertimes, clusters=c("within", "between")){
     g
 }
 
-theoretical_roc = function(intertimes, clusters){
-    fit = fit_intertimes(intertimes, clusters)
+theoretical_roc = function(intertimes, clusters, fit=NULL){
+    intertimes = intertimes[intertimes > 0]
+    if(is.null(fit)){
+        fit = fit_intertimes(intertimes, clusters)
+    }
     
     x = seq(0, max(log2(intertimes)), .1)
     
-    within_clusters = intersect(clusters, c("within", "within_short",
-                                            "within_long"))
+    within_clusters = intersect(clusters, c("within", "short_within",
+                                            "long_within"))
     within_mass = sum(sapply(within_clusters, function(c){fit[[c]]$lambda}))
     
     tp = 0
@@ -195,32 +201,34 @@ theoretical_roc = function(intertimes, clusters){
     
 }
 
-plot_roc = function(intertimes, clusters=c("within", "between")){
-    roc = theoretical_roc(intertimes, clusters)
+plot_roc = function(intertimes, clusters=c("within", "between"), fit=NULL){
+    roc = theoretical_roc(intertimes, clusters, fit)
     ggplot(
         roc,
         aes(x=false_positive, y=true_positive)
     ) +
+    geom_line() +
     geom_line(
+        data=data.table(x=c(0,1), y=c(0, 1)),
         aes(
-            x=c(0, 1),
-            y=c(0, 1)
+            x=x,
+            y=x
         ),
         linetype=2,
         color="#888888"
     ) +
-    geom_line() +
     scale_x_continuous("\nFalse positive rate") +
     scale_y_continuous("True positive rate\n") +
     theme_bw()
 }
 
 plot_true_and_false_positives = function(intertimes,
-                                         clusters=c("within", "between")){
+                                         clusters=c("within", "between"),
+                                         fit=NULL){
     
     ggplot(
         with(
-            theoretical_roc(intertimes, clusters),
+            theoretical_roc(intertimes, clusters, fit),
             rbind(
                 data.table(
                     x=threshold,
@@ -268,4 +276,35 @@ plot_true_and_false_positives = function(intertimes,
         legend.position="top"
     ) +
     scale_y_continuous("Rate\n")
+}
+
+plot_true_and_false_positive_difference = function(intertimes,
+                                         clusters=c("within", "between"),
+                                         fit=NULL){
+    
+    ggplot(
+        theoretical_roc(intertimes, clusters, fit),
+        aes(x=threshold, y=true_positive - false_positive)
+    ) +
+    geom_line() +
+    theme_bw() +
+    scale_x_log10(
+        "\nInter-activity threshold",
+        breaks=c(
+            5,
+            60,
+            7*60,
+            60*60,
+            24*60*60,
+            7*24*60*60,
+            30*24*60*60,
+            356*24*60*60
+        ),
+        labels=c("5 sec.", "minute", "7 min.", "hour", "day",
+                 "week", "month", "year")
+    ) +
+    theme(
+        axis.text.x = element_text(angle = 45, hjust = 1)
+    ) +
+    scale_y_continuous("TP rate - FP rate\n")
 }

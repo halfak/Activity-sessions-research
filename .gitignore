@@ -4,10 +4,15 @@ __pycache__/
 *~
 
 # Datasets
-*.tsv
+*.tsv*
 *.table
 *.created
 *.loaded
+
+# Plots
+*.svg
+*.ps
+*.png
 
 # C extensions
 *.so

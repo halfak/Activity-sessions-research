@@ -1,5 +1,9 @@
-datasets/aol_search_intertime.tsv: sessions/intertimes.py
-	tail -n+2 datasets/aol_search_action.tsv | \
+dbstore = -u research -h analytics-store.eqiad.wmnet
+
+datasets/aol_search_intertime.tsv:
+		sessions/intertimes.py \
+		datasets/originals/aol_search_action.tsv
+	tail -n+2 datasets/originals/aol_search_action.tsv | \
 	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" > \
 	datasets/aol_search_intertime.tsv
 
@@ -14,7 +18,7 @@ aol_samples: datasets/aol_search_intertime.sample.tsv
 ##################### MovieLens ################################################
 datasets/movielens_action_intertime.sample.tsv: \
 		sessions/intertimes.py \
-		datasets/movielens_action.tsv
+		datasets/originals/movielens_action.tsv
 	(\
 		echo -e "user_id\tintertime\ttype"; \
 		tail -n+2 datasets/movielens_action.tsv | \
@@ -92,5 +96,130 @@ datasets/movielens_action_intertime.sample.tsv: \
 		tail -n+2 | sed -r "s/(.*)/\1\tYour Wish List/" | \
 		shuf -n 100000; \
 	) | \
-	tail --bytes+4 > \
+	tail --bytes=+4 > \
 	datasets/movielens_action_intertime.sample.tsv
+
+######################### Wikipedia ############################################
+datasets/originals/enwiki_edit_action.tsv: sql/edit_action.sql
+	cat sql/edit_action.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/originals/enwiki_edit_action.tsv
+
+datasets/enwiki_edit_intertime.sample.tsv: \
+	datasets/originals/enwiki_edit_action.tsv
+	( \
+		echo -e "user_id\tintertime\ttype"; \
+		tail -n+2 datasets/originals/enwiki_edit_action.tsv | \
+		./intertimes --timestamp-format="%Y%m%d%H%M%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\trevision/" | shuf -n 500000; \
+	) | tail --bytes=+3 > \
+	datasets/enwiki_edit_intertime.sample.tsv
+
+datasets/enwiki_direct_sample_intertime.tsv: \
+		sql/enwiki_direct_sample_intertime.sql
+	cat sql/enwiki_direct_sample_intertime.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/enwiki_direct_sample_intertime.tsv
+
+datasets/wikipedia_action_intertime.sample.tsv: \
+		sessions/intertimes.py \
+		datasets/originals/wikipedia/app_view.tsv.gz \
+		datasets/originals/wikipedia/desktop_view.tsv.gz \
+		datasets/originals/wikipedia/edit.tsv.gz \
+		datasets/originals/wikipedia/mobile_view.tsv.gz \
+		datasets/originals/wikipedia/search.tsv.gz\
+		datasets/originals/wikipedia/search_suggestion.tsv.gz
+	(\
+		echo -e "user_id\tintertime\ttype"; \
+		zcat datasets/originals/wikipedia/app_view.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%dT%H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tapp view/" | \
+		shuf -n 100000; \
+		zcat datasets/originals/wikipedia/desktop_view.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tdesktop view/" | \
+		shuf -n 100000; \
+		zcat datasets/originals/wikipedia/edit.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tedit/" | \
+		shuf -n 100000; \
+		zcat datasets/originals/wikipedia/mobile_view.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tmobile view/" | \
+		shuf -n 100000; \
+		zcat datasets/originals/wikipedia/search.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tsearch/" | \
+		shuf -n 100000;\
+		zcat datasets/originals/wikipedia/search_suggestion.tsv.gz | \
+		tail -n+2 | sort | \
+		./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+		tail -n+2 | sed -r "s/(.*)/\1\tsearch suggestion/" | \
+		shuf -n 100000; \
+	) | \
+	tail --bytes=+4 > \
+	datasets/wikipedia_action_intertime.sample.tsv
+
+####################### League of Legends ######################################
+datasets/lol_game_intertime.sample.tsv: \
+		datasets/originals/lol_game_intertime.tsv.bz2 \
+		sessions/intertimes.py
+	(echo -e "user_id\tintertime\ttype"; \
+	 bzcat datasets/originals/lol_game_intertime.tsv.bz2 | \
+	 tail -n+2  | shuf -n 500000; ) | \
+	tail --bytes=+4 > \
+	datasets/lol_game_intertime.sample.tsv
+	
+	
+	
+####################### Stack Overflow #########################################
+#
+# 1  Question
+# 2  Answer
+# 3  Tag Wiki
+#
+datasets/stack_overflow_post_intertime.sample.tsv: \
+		datasets/originals/stack_overflow_post.tsv.bz2
+	(echo -e "user_id\tintertime\ttype"; \
+	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
+	 tail -n+2 | \
+	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 sed -r "s/(.+)/\1\tall/" | tail -n+2 | shuf -n 100000; \
+	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
+	 tail -n+2 | grep -E "1$" | \
+	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 sed -r "s/(.+)/\1\tquestion/" | tail -n+2 | shuf -n 100000; \
+	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
+	 tail -n+2 | grep -E "2$" | \
+	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 sed -r "s/(.+)/\1\tanswer/" | tail -n+2 | shuf -n 100000; \
+	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
+	 tail -n+2 | grep -E "(1|2)$" | \
+	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 sed -r "s/(.+)/\1\tquestion\/answer/" | tail -n+2 | shuf -n 100000; \
+	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
+	 tail -n+2 | grep -E "3$" | \
+	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 sed -r "s/(.+)/\1\ttag wiki/" | tail -n+2 | shuf -n 100000;) | \
+	tail --bytes=+4 > \
+	datasets/stack_overflow_post_intertime.sample.tsv
+
+
+########################## Open Street Map #####################################
+datasets/osm_change_intertime.tsv.bz2: \
+		datasets/originals/osm_change.sorted.tsv.bz2
+	bzcat datasets/originals/osm_change.sorted.tsv.bz2 | tail -n+2 | \
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | bzip2 -c > \
+	datasets/osm_edit_intertime.tsv.bz2
+	
+datasets/osm_change_intertime.sample.tsv: \
+		datasets/osm_change_intertime.tsv.bz2
+	(echo "user_id\tintertime\ttype"; \
+	 bzcat datasets/osm_change_intertime.tsv.bz2 |  \
+	 tail -n+2 | sed -r "s/(.+)/\1\tchange/"  | shuf -n 500000 ) > \
+	datasets/osm_change_intertime.sample.tsv

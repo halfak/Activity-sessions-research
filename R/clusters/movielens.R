@@ -1,17 +1,6 @@
 source("loader/movielens_action_intertimes.sample.R")
 
 actions = load_movielens_action_intertimes.sample(reload=T)
-actions = data.table(read.table(
-    "../datasets/movielens_action_intertime.sample.old.tsv",
-    header=T, sep="\t",
-    quote="", comment.char="",
-    na.strings="NULL",
-    fill=T, row.names=NULL
-))
-actions$user_id = actions$row.names
-actions$type.first = actions$intertime
-actions$intertime = actions$X.e.user_id
-actions[type == "",]$type = actions[type == "",]$type.first
 
 source('clustering.R')
 
@@ -43,24 +32,56 @@ scale_y_continuous("Density\n") +
 theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
 
-
-svg("clusters/plots/movielens_actions.svg", height=5, width=7)
-plot_clusters(actions, clusters=3)
+########################## All #################################################
+svg("clusters/plots/inter-activity_time.movielens_actions.svg", height=5, width=7)
+plot_clusters(
+    actions[type=="all",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
 dev.off()
 
-svg("clusters/plots/movielens_views.svg", height=5, width=7)
-plot_clusters(views, clusters=3)
+svg("clusters/plots/threshold_roc.movielens_actions.svg", height=5, width=7)
+plot_roc(
+    actions[type=="all",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
 dev.off()
 
-svg("clusters/plots/movielens_searches.svg", height=5, width=7)
-plot_clusters(searches, clusters=3)
+svg("clusters/plots/true_and_false_positives.movielens_actions.svg", height=5, width=7)
+plot_true_and_false_positives(
+    actions[type=="all",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
 dev.off()
 
+########################## Searches ############################################
+svg("clusters/plots/inter-activity_time.movielens_searches.svg",
+    height=5, width=7)
+plot_clusters(
+    actions[type=="search",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
+dev.off()
+
+svg("clusters/plots/threshold_roc.movielens_searches.svg", height=5, width=7)
+plot_roc(
+    actions[type=="search",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
+dev.off()
+
+svg("clusters/plots/true_and_false_positives.movielens_searches.svg", height=5, width=7)
+plot_true_and_false_positives(
+    actions[type=="search",]$intertime,
+    clusters=c("short_within", "long_within", "between")
+)
+dev.off()
+
+
+############################### Old stuff ######################################
 svg("clusters/plots/movielens_ratings.svg", height=5, width=7)
 plot_clusters(ratings, clusters=3)
 dev.off()
-
-
 
 svg("clusters/plots/movielens_actions.two_clusters.svg", height=5, width=7)
 plot_clusters(actions, clusters=2)

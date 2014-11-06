@@ -16,3 +16,11 @@ svg("clusters/plots/true_and_false_positives.aol_searches.svg",
     height=5, width=7)
 plot_true_and_false_positives(searches$intertime, c("within", "between"))
 dev.off()
+
+svg("clusters/plots/true_and_false_positive_difference.aol_searches.svg",
+    height=5, width=7)
+plot_true_and_false_positive_difference(
+    searches$intertime,
+    clusters=c("within", "between")
+)
+dev.off()
