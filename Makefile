@@ -115,11 +115,18 @@ datasets/enwiki_edit_intertime.sample.tsv: \
 	) | tail --bytes=+3 > \
 	datasets/enwiki_edit_intertime.sample.tsv
 
-datasets/enwiki_direct_sample_intertime.tsv: \
-		sql/enwiki_direct_sample_intertime.sql
-	cat sql/enwiki_direct_sample_intertime.sql | \
-	mysql $(dbstore) enwiki > \
-	datasets/enwiki_direct_sample_intertime.tsv
+#datasets/enwiki_direct_sample_intertime.tsv: \
+#		sql/enwiki_direct_sample_intertime.sql
+#	cat sql/enwiki_direct_sample_intertime.sql | \
+#	mysql $(dbstore) enwiki > \
+#	datasets/enwiki_direct_sample_intertime.tsv
+
+datasets/enwiki_direct_sample_intertime.sample.tsv: \
+		datasets/enwiki_direct_sample_intertime.tsv
+	(echo "user_id\tintertime\ttype"; \
+	 cat datasets/enwiki_direct_sample_intertime.tsv | tail -n+2 | \
+	 shuf -n 100000 | sed -r "s/(.*)/\1\tedit/" ) > \
+	datasets/enwiki_direct_sample_intertime.sample.tsv
 
 datasets/wikipedia_action_intertime.sample.tsv: \
 		sessions/intertimes.py \
@@ -248,15 +255,14 @@ datasets/osm_changeset_intertime.sample.tsv: \
 ############################ Cyclopath #########################################
 
 #Not sampled
-datasets/cyclopath_select_intertime.tsv: \
+datasets/cyclopath_action_intertime.tsv: \
+		datasets/originals/cyclopath_route_get.tsv.bz2 \
 		datasets/originals/cyclopath_select.tsv.bz2
+	(echo "user_id\tintertime\ttype"; \
 	bzcat datasets/originals/cyclopath_select.tsv.bz2 | \
-	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" > \
-	datasets/cyclopath_select_intertime.tsv
-
-# Not sampled
-datasets/cyclopath_route_get_intertime.tsv: \
-		datasets/originals/cyclopath_route_get.tsv.bz2
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	tail -n+2 | sed -r "s/(.+)/\1\tselect/"; \
 	bzcat datasets/originals/cyclopath_route_get.tsv.bz2 | \
-	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" > \
-	datasets/cyclopath_route_get_intertime.tsv
+	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	tail -n+2 | sed -r "s/(.+)/\1\troute_get/") > \
+	datasets/cyclopath_action_intertime.tsv

@@ -308,3 +308,142 @@ plot_true_and_false_positive_difference = function(intertimes,
     ) +
     scale_y_continuous("TP rate - FP rate\n")
 }
+
+# generates AUC
+area_under_theoretical_roc = function(intertimes, clusters, fit=NULL) {
+    theoretical_roc(intertimes, clusters, fit) -> roc
+    sum = 0
+    for (i in 2:dim(roc)[1]) {
+        lastRow = roc[i-1]
+        row = roc[i]
+        width = row$false_positive - lastRow$false_positive
+        avgHeight = (row$true_positive + lastRow$true_positive)/2
+        sum = sum + width*avgHeight
+    }
+    sum
+}
+
+# Generates an optimal cutoff between clusters
+extract_cutoff = function(fit, left="between", right="within") {
+   # optimal cutoff is described by quadratic equation
+   if (fit[[left]]$mu > fit[[right]]$mu) {
+      tmp = left
+      left = right
+      right = tmp
+   }
+
+   s1 = fit[[left]]$sigma
+   s2 = fit[[right]]$sigma
+   m1 = fit[[left]]$mu
+   m2 = fit[[right]]$mu
+   l1 = fit[[left]]$lambda
+   l2 = fit[[right]]$lambda
+
+   a =  1/(2*s1*s1) - 1/(2*s2*s2)
+   b = -1*m1/(s1*s1) + m2/(s2*s2)
+   c = m1*m1/(2*s1*s1) - m2*m2/(2*s2*s2) - log(s2*l1/(s1*l2))
+
+   # cutoff is one of two values
+   cut1 = (-b + sqrt(b*b-4*a*c))/2/a
+   cut2 = (-b - sqrt(b*b-4*a*c))/2/a
+
+   # compute the cut as the one that is inbetween the means.
+   cut = 0
+   if ((m1 <= cut1) && (cut1 <= m2)) {
+     cut = cut1
+   } else {
+     cut = cut2
+   }
+   cut
+}
+
+# Splits intertimes based on optimal clusters
+split_clusters = function(intertimes, clusters, fit=NULL) {
+    intertimes = intertimes[intertimes > 0]
+    if(is.null(fit)){
+        fit = fit_intertimes(intertimes, clusters)
+    }
+    
+    # there is probably a cleaner way to write this code...
+    breaks = 1:(length(clusters)+1)
+    breaks[1] = -Inf
+
+    for (i in 2:length(clusters)) {
+      # transform to non-log space
+            breaks[i] = 2**extract_cutoff(fit, clusters[i-1], clusters[i])
+    }
+    breaks[length(clusters)+1] = Inf
+
+    clusts = list()
+    for (i in 2:length(breaks)) {
+        cluster = intertimes[(intertimes > breaks[i-1]) & (intertimes <= breaks[i])]
+        clusts[[clusters[i-1]]] = cluster
+    }
+    clusts
+}
+
+var_reduction = function(intertimes, clusters, fit=NULL) {
+    clusts = split_clusters(intertimes, clusters, fit)
+
+    totalVar = var(intertimes)
+    for (cluster in clusters) {
+      totalVar = totalVar - var(clusts[[cluster]])
+    }
+    totalVar
+}
+
+
+davies_boulin = function(intertimes, clusters, fit=NULL) {
+    clusts = split_clusters(intertimes, clusters, fit)
+    centroids = lapply(clusts, function(x){mean(x)})
+    
+    computeS = function(cluster) {
+      points = clusts[[cluster]]
+      points = abs(points - centroids[[cluster]])
+      mean(points)
+    }
+
+    S = lapply(clusters, computeS)
+    names(S) <- clusters
+
+    dindex = 0
+    for(cluster in clusters) {
+        maxR = -1
+        for (cluster2 in clusters) {
+            if (cluster2 != cluster) {
+                Mij = abs(centroids[[cluster]] - centroids[[cluster2]])
+                R = (S[[cluster]] + S[[cluster2]])/ Mij
+                maxR = max(R, maxR)
+            }
+        }
+        dindex = dindex + maxR
+    }
+    dindex/length(clusters)
+}
+
+average_entropy = function(intertimes, clusters, fit=NULL) {
+    intertimes = intertimes[intertimes > 0]
+    if(is.null(fit)){
+        fit = fit_intertimes(intertimes, clusters)
+    }
+
+    entropy = function(intertime) {
+        if (intertime == 0) {
+          intertime = 0.1
+        }
+        intertime = log(intertime, base=2)
+        pxc = 1:length(clusters)
+        for(i in 1:length(clusters)) {
+            cluster = clusters[i]
+            pxc[i] = fit[[cluster]]$lambda * dnorm(intertime, fit[[cluster]]$mu, fit[[cluster]]$sigma)
+        }
+        pxc = pxc/sum(pxc)
+        ent = 0
+        for(pc in pxc) {
+          ent = ent - pc*log(pc)
+        }
+        ent
+    }
+    mean(sapply(intertimes, entropy))
+    
+}
