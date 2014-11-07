@@ -19,8 +19,30 @@ plot_clusters(
 )
 dev.off()
 
-cluster_intertimes = split_clusters(
+
+davies_boulin(
     edits$intertime,
     clusters=c("within", "between", "extended_break"),
     fit=edit_fit
+)
+
+two_distr_fit = fit_intertimes(
+    edits$intertime,
+    clusters=c("within", "between")
+)
+davies_boulin(
+    edits$intertime,
+    clusters=c("within", "between"),
+    fit=two_distr_fit
+)
+
+
+four_distr_fit = fit_intertimes(
+    edits$intertime,
+    clusters=c("short_within", "long_within", "between", "extended_break")
+)
+davies_boulin(
+    edits$intertime,
+    clusters=c("short_within", "long_within", "between", "extended_break"),
+    fit=four_distr_fit
 )

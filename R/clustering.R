@@ -1,5 +1,4 @@
-library(ggplot2)
-library(doBy)
+source("util.R")
 library(mixtools)
 
 cluster_init = list(
@@ -383,11 +382,12 @@ split_clusters = function(intertimes, clusters, fit=NULL) {
 }
 
 var_reduction = function(intertimes, clusters, fit=NULL) {
+    intertimes = intertimes[intertimes > 0]
     clusts = split_clusters(intertimes, clusters, fit)
 
-    totalVar = var(intertimes)
+    totalVar = var(log2(intertimes))
     for (cluster in clusters) {
-      totalVar = totalVar - var(clusts[[cluster]])
+      totalVar = totalVar - var(log2(clusts[[cluster]]))
     }
     totalVar
 }

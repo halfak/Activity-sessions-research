@@ -1,5 +1,4 @@
 library(ggplot2)
-library(doBy)
 library(data.table)
 
 
