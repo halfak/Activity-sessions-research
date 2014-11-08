@@ -9,7 +9,7 @@ selects_fit = fit_intertimes(
     actions[type=="select",]$intertime,
     clusters=c("short_within", "long_within", "between")
 )
-svg("clusters/plots/inter-activity_time.cyclopath_selects.svg", height=5, width=7)
+svg("exploration/plots/inter-activity_time.cyclopath_selects.svg", height=5, width=7)
 plot_clusters(
     actions[type=="select",]$intertime,
     clusters=c("short_within", "long_within", "between"),
@@ -17,7 +17,7 @@ plot_clusters(
 )
 dev.off()
 
-svg("clusters/plots/threshold_roc.cyclopath_selects.svg", height=5, width=7)
+svg("exploration/plots/threshold_roc.cyclopath_selects.svg", height=5, width=7)
 plot_roc(
     actions[type=="select",]$intertime,
     clusters=c("short_within", "long_within", "between"),
@@ -25,7 +25,7 @@ plot_roc(
 )
 dev.off()
 
-svg("clusters/plots/true_and_false_positives.cyclopath_selects.svg",
+svg("exploration/plots/true_and_false_positives.cyclopath_selects.svg",
     height=5, width=7)
 plot_true_and_false_positives(
     actions[type=="select",]$intertime,
@@ -34,7 +34,7 @@ plot_true_and_false_positives(
 )
 dev.off()
 
-svg("clusters/plots/true_and_false_positive_difference.cyclopath_selects.svg",
+svg("exploration/plots/true_and_false_positive_difference.cyclopath_selects.svg",
     height=5, width=7)
 plot_true_and_false_positive_difference(
     actions[type=="select",]$intertime,
@@ -49,7 +49,7 @@ route_get_fit = fit_intertimes(
     actions[type=="route_get",]$intertime,
     clusters=c("within", "between")
 )
-svg("clusters/plots/inter-activity_time.cyclopath_route_gets.svg", height=5, width=7)
+svg("exploration/plots/inter-activity_time.cyclopath_route_gets.svg", height=5, width=7)
 plot_clusters(
     actions[type=="route_get",]$intertime,
     clusters=c("within", "between"),
@@ -57,7 +57,7 @@ plot_clusters(
 )
 dev.off()
 
-svg("clusters/plots/threshold_roc.cyclopath_route_gets.svg", height=5, width=7)
+svg("exploration/plots/threshold_roc.cyclopath_route_gets.svg", height=5, width=7)
 plot_roc(
     actions[type=="route_get",]$intertime,
     clusters=c("within", "between"),
@@ -65,7 +65,7 @@ plot_roc(
 )
 dev.off()
 
-svg("clusters/plots/true_and_false_positives.cyclopath_route_gets.svg",
+svg("exploration/plots/true_and_false_positives.cyclopath_route_gets.svg",
     height=5, width=7)
 plot_true_and_false_positives(
     actions[type=="route_get",]$intertime,
@@ -74,7 +74,7 @@ plot_true_and_false_positives(
 )
 dev.off()
 
-svg("clusters/plots/true_and_false_positive_difference.cyclopath_route_gets.svg",
+svg("exploration/plots/true_and_false_positive_difference.cyclopath_route_gets.svg",
     height=5, width=7)
 plot_true_and_false_positive_difference(
     actions[type=="route_get",]$intertime,

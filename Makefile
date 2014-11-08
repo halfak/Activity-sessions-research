@@ -8,9 +8,9 @@ datasets/aol_search_intertime.tsv:
 	datasets/aol_search_intertime.tsv
 
 datasets/aol_search_intertime.sample.tsv: datasets/aol_search_intertime.tsv
-	(head -n1 datasets/aol_search_intertime.tsv; \
-	shuf -n 100000 datasets/aol_search_intertime.tsv | \
-	grep -v $(head -n1 datasets/aol_search_intertime.tsv)) > \
+	(echo "user_id\tintertime\ttype"; \
+	tail -n+2 datasets/aol_search_intertime.tsv | shuf -n 100000 | \
+	sed -r "s/(.*)/\1\tsearch/") > \
 	datasets/aol_search_intertime.sample.tsv
 
 aol_samples: datasets/aol_search_intertime.sample.tsv
@@ -78,7 +78,7 @@ datasets/wikimedia_event_intertime.sample.tsv: \
 	 tail -n+2 | sed -r "s/(.*)/\1\tapp view/" | \
 	 shuf -n 100000; \
 	 bzcat datasets/originals/wikimedia/mobile_view.tsv.bz2 | tail -n+2 | \
-	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
+	 ./intertimes --timestamp-format="%Y-%m-%dT%H:%M:%S" | \
 	 tail -n+2 | sed -r "s/(.*)/\1\tmobile view/" | \
 	 shuf -n 100000; \
 	 bzcat datasets/originals/wikimedia/ms_desktop_view.tsv.bz2 | tail -n+2 | \
@@ -105,16 +105,17 @@ datasets/lol_game_intertime.sample.tsv: \
 # 3  Tag Wiki
 #
 datasets/stack_overflow_event_intertime.sample.tsv: \
-		datasets/originals/stack_overflow_post.tsv.bz2
+		datasets/originals/stack_overflow_event.tsv.bz2 \
+		sessions/intertimes.py
 	(echo "user_id\tintertime\ttype"; \
-	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | tail -n+2 | \
+	 bzcat datasets/originals/stack_overflow_event.tsv.bz2 | tail -n+2 | \
 	 grep -E "1$" | \
 	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
 	 sed -r "s/(.+)/\1\tquestion/" | tail -n+2 | shuf -n 100000; \
-	 bzcat datasets/originals/stack_overflow_post.tsv.bz2 | \
-	 tail -n+2 | grep -E "2$" | \
+	 bzcat datasets/originals/stack_overflow_event.tsv.bz2 | tail -n+2 | \
+	 grep -E "2$" | \
 	 ./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
-	 sed -r "s/(.+)/\1\tanswer/" | tail -n+2 | shuf -n 100000) > \
+	 sed -r "s/(.+)/\1\tanswer/" | tail -n+2 | shuf -n 100000;) > \
 	datasets/stack_overflow_event_intertime.sample.tsv
 
 
@@ -151,20 +152,19 @@ datasets/osm_changeset_intertime.sample.tsv: \
 	datasets/osm_changeset_intertime.tsv.bz2
 	(echo "user_id\tintertime\ttype"; \
 	 bzcat datasets/osm_changeset_intertime.tsv.bz2 |  \
-	 tail -n+2 | sed -r "s/(.+)/\1\tchange_set/"  | shuf -n 1000000 ) > \
+	 tail -n+2 | sed -r "s/(.+)/\1\tchange set/"  | shuf -n 1000000 ) > \
 	 datasets/osm_changeset_intertime.sample.tsv
 
 ############################ Cyclopath #########################################
 
 #Not sampled
-datasets/cyclopath_action_intertime.tsv: \
-		datasets/originals/cyclopath_route_get.tsv.bz2 \
-		datasets/originals/cyclopath_select.tsv.bz2
+datasets/cyclopath_event_intertime.tsv: \
+		datasets/originals/cyclopath_event.tsv.bz2
 	(echo "user_id\tintertime\ttype"; \
-	bzcat datasets/originals/cyclopath_select.tsv.bz2 | \
+	bzcat datasets/originals/cyclopath_event.tsv.bz2 | grep "select" | \
 	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
 	tail -n+2 | sed -r "s/(.+)/\1\tselect/"; \
-	bzcat datasets/originals/cyclopath_route_get.tsv.bz2 | \
+	bzcat datasets/originals/cyclopath_event.tsv.bz2 | grep "route_get" | \
 	./intertimes --timestamp-format="%Y-%m-%d %H:%M:%S" | \
-	tail -n+2 | sed -r "s/(.+)/\1\troute_get/") > \
-	datasets/cyclopath_action_intertime.tsv
+	tail -n+2 | sed -r "s/(.+)/\1\troute get/") > \
+	datasets/cyclopath_event_intertime.tsv

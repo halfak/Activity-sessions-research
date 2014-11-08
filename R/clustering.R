@@ -48,7 +48,7 @@ fit_intertimes = function(intertimes, clusters){
     inits = cluster_inits(clusters)
     
     fit = normalmixEM(
-        log(intertimes[intertimes > 0], base=2),
+        log(sample(intertimes[intertimes > 0], 10000), base=2),
         lambda=inits$lambda,
         mu=inits$mu,
         sigma=inits$sigma

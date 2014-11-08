@@ -5,6 +5,7 @@ __pycache__/
 
 # Datasets
 *.tsv*
+*.tar*
 *.table
 *.created
 *.loaded

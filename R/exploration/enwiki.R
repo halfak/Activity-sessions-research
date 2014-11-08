@@ -10,7 +10,7 @@ edit_fit = fit_intertimes(
     edits$intertime,
     clusters=c("within", "between", "extended_break")
 )
-svg("clusters/plots/inter-activity_time.enwiki_edit.svg",
+svg("exploration/plots/inter-activity_time.enwiki_edit.svg",
     height=5, width=7)
 plot_clusters(
     edits$intertime,
