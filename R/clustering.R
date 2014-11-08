@@ -48,10 +48,11 @@ fit_intertimes = function(intertimes, clusters){
     inits = cluster_inits(clusters)
     
     fit = normalmixEM(
-        log(sample(intertimes[intertimes > 0], 10000), base=2),
+        log(sample(intertimes[intertimes > 0], 10000, replace=T), base=2),
         lambda=inits$lambda,
         mu=inits$mu,
-        sigma=inits$sigma
+        sigma=inits$sigma,
+        maxit=500
     )
     
     cluster_fits = list()
@@ -355,6 +356,24 @@ extract_cutoff = function(fit, left="between", right="within") {
    }
    cut
 }
+fit = list(
+    short_within=list(
+        mu=4.723914,
+        sigma=1.026779,
+        lambda=0.1211934
+    ),
+    long_within=list(
+        mu=7.306938,
+        sigma=3.106101,
+        lambda=0.6019374
+    ),
+    between=list(
+        mu=16.9907,
+        sigma=2.059395,
+        lambda=0.2768692
+    )
+)
+extract_cutoff(fit, "short_within", "long_within")
 
 # Splits intertimes based on optimal clusters
 split_clusters = function(intertimes, clusters, fit=NULL) {
