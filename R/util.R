@@ -110,6 +110,21 @@ ifna = function(x, then){
 	
 }
 
+ifnull = function(x, then){
+	mapply(
+		function(xval, thenval){
+			if(is.null(xval)){
+				thenval
+			}else{
+				xval
+			}
+		},
+		x,
+		then
+	)
+	
+}
+
 clean.monthly_creations = function(dt){
 	dt$month_created = as.Date(dt$month_created)
 	dt$account_creation = sapply(
