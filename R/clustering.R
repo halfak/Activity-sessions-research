@@ -26,8 +26,8 @@ cluster_init = list(
         mu = 16.5,
         sigma = 2.2
     ),
-    extended_break = list(
-        color = "yellow",
+    "break" = list(
+        color = "green",
         lambda = .05,
         mu = 22.5,
         sigma = 2.5
@@ -48,7 +48,7 @@ fit_intertimes = function(intertimes, clusters){
     inits = cluster_inits(clusters)
     
     fit = normalmixEM(
-        log(sample(intertimes[intertimes > 0], 10000, replace=T), base=2),
+        log(sample(intertimes[intertimes > 0], 50000, replace=T), base=2),
         lambda=inits$lambda,
         mu=inits$mu,
         sigma=inits$sigma,
@@ -356,24 +356,6 @@ extract_cutoff = function(fit, left="between", right="within") {
    }
    cut
 }
-fit = list(
-    short_within=list(
-        mu=4.723914,
-        sigma=1.026779,
-        lambda=0.1211934
-    ),
-    long_within=list(
-        mu=7.306938,
-        sigma=3.106101,
-        lambda=0.6019374
-    ),
-    between=list(
-        mu=16.9907,
-        sigma=2.059395,
-        lambda=0.2768692
-    )
-)
-extract_cutoff(fit, "short_within", "long_within")
 
 # Splits intertimes based on optimal clusters
 split_clusters = function(intertimes, clusters, fit=NULL) {
@@ -394,7 +376,8 @@ split_clusters = function(intertimes, clusters, fit=NULL) {
 
     clusts = list()
     for (i in 2:length(breaks)) {
-        cluster = intertimes[(intertimes > breaks[i-1]) & (intertimes <= breaks[i])]
+        cluster = intertimes[(intertimes > breaks[i-1]) &
+                             (intertimes <= breaks[i])]
         clusts[[clusters[i-1]]] = cluster
     }
     clusts
@@ -454,7 +437,9 @@ average_entropy = function(intertimes, clusters, fit=NULL) {
         pxc = 1:length(clusters)
         for(i in 1:length(clusters)) {
             cluster = clusters[i]
-            pxc[i] = fit[[cluster]]$lambda * dnorm(intertime, fit[[cluster]]$mu, fit[[cluster]]$sigma)
+            pxc[i] = fit[[cluster]]$lambda *
+                     dnorm(intertime, fit[[cluster]]$mu,
+            fit[[cluster]]$sigma)
         }
         pxc = pxc/sum(pxc)
         ent = 0
@@ -465,4 +450,172 @@ average_entropy = function(intertimes, clusters, fit=NULL) {
     }
     mean(sapply(intertimes, entropy))
     
+}
+ 
+plot_clusters_datasets = function(datasets, clusters, split){
+    frequencies = rbindlist(
+        lapply(
+            datasets,
+            function(dataset){
+                merge(
+                    dataset$data[intertime>0,
+                        list(
+                            site = dataset$site,
+                            event = dataset$event,
+                            frequency = length(user_id)
+                        ),
+                        list(
+                            intertime = 1.45^floor(log(intertime, base=1.45))
+                        )
+                    ],
+                    dataset$data[intertime>0,
+                        list(
+                            site = dataset$site,
+                            event = dataset$event,
+                            n = length(user_id)
+                        )
+                    ],
+                    by=c("site", "event")
+                )
+            }
+        )
+    )
+    
+    fits = lapply(
+        datasets,
+        function(dataset){
+            fit_intertimes(dataset$data$intertime, clusters)
+        }
+    )
+    
+    
+    dbis = rbindlist(
+        lapply(
+            datasets,
+            function(dataset){
+                fit = fits[[paste(dataset$site, dataset$event)]]
+                data.table(
+                    site=dataset$site,
+                    event=dataset$event,
+                    dbi=davies_boulin(dataset$data$intertime, clusters, fit)
+                )
+            }
+        )
+    )
+    
+    dists = rbindlist(
+        lapply(
+            datasets,
+            function(dataset){
+                fit = fits[[paste(dataset$site, dataset$event)]]
+                if(!is.null(split) & !is.na(split)){
+                    threshold = tryCatch(
+                        2^extract_cutoff(fit, split[1], split[2]),
+                        error=function(e){NA}
+                    )
+                }else{
+                    threshold = NA
+                }
+                max_intertime = max(dataset$data$intertime)
+                
+                rbindlist(
+                    lapply(
+                        clusters,
+                        function(cluster){
+                            log_norm = function(x){
+                                dnorm(x, fit[[cluster]]$mu,
+                                      fit[[cluster]]$sigma) *
+                                fit[[cluster]]$lambda
+                            }
+                            data.table(
+                                site=dataset$site,
+                                event=dataset$event,
+                                threshold=threshold,
+                                intertime = 2^seq(0,log2(max_intertime),.01),
+                                density =
+                                    log_norm(seq(0,log2(max_intertime),.01)),
+                                cluster = cluster
+                            )
+                        }
+                    )
+                )
+            }
+        )
+    )
+    
+    
+    cluster_colors = sapply(cluster_init, function(c){c$color})
+    
+    ggplot(
+        frequencies[intertime > 0],
+        aes(
+            x=intertime,
+            y=frequency/n
+        )
+    ) +
+    facet_wrap(~ site + event, ncol=1) +
+    geom_bar(
+        fill="#EEEEEE",
+        color="#555555",
+        stat="identity"
+    ) +
+    geom_area(
+        data=dists,
+        aes(x=intertime,y=density*.55, fill=cluster),
+        alpha=0.5,
+        position="identity"
+    ) +
+    geom_line(
+        data=dists,
+        aes(x=intertime,y=density*.55, color=cluster),
+    ) +
+    geom_vline(
+        data=dists,
+        aes(xintercept=threshold),
+        linetype=2
+    ) +
+    geom_text(
+        data=dbis,
+        aes(
+            x=Inf,
+            y=Inf,
+            label=paste("DBi:", round(dbi, 2))
+        ),
+        vjust=1,
+        hjust=1,
+        size=3
+    ) +
+    scale_x_log10(
+        "Inter-activity time",
+        breaks=c(
+            5,
+            60,
+            7*60,
+            60*60,
+            24*60*60,
+            7*24*60*60,
+            30*24*60*60,
+            356*24*60*60
+        ),
+        labels=c("5 sec.", "minute", "7 min.", "hour", "day",
+                 "week", "month", "year")
+    ) +
+    scale_y_continuous("") +
+    scale_fill_manual(
+        name="Clusters",
+        values=cluster_colors,
+        breaks=names(cluster_colors),
+        guide="legend"
+    ) +
+    scale_color_manual(
+        name="Clusters",
+        values=cluster_colors,
+        breaks=names(cluster_colors),
+        guide="legend"
+    ) +
+    theme_bw() +
+    theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position="top"
+    )
 }

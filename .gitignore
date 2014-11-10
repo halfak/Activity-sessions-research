@@ -10,6 +10,13 @@ __pycache__/
 *.created
 *.loaded
 
+# Latex shit
+*.aux
+*.bbl
+*.aug
+*.dvi
+*.blg
+
 # Plots
 *.svg
 *.ps
