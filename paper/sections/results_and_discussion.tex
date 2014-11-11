@@ -1,14 +1,13 @@
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{figures/bimodal_clusters.pdf}
-\label{fig:bimodal_clusters}
 \caption{
     \textbf{Bimodal clusters.} Empirical inter-activity density (bars) and fitted mixture models of gaussians are plotted for datasets where two clusters appeared to sufficiently explain the observed data.
 }
+\label{fig:bimodal_clusters}
 \end{figure}
-%FIXME: reference table correctly?
 \input{tables/fits}
-In this section, we present and discuss the result of applying our proposed inactivity threshold identification analysis to the datsets.  First we start off with the common, simple cluster fits.  Then we move to more complicated fits and discuss the implications of additional clusters.  Finally, we demonstrate datasets with less suitable fits and discuss what this implies about the nature of participation in these systems.  Reference Table~\ref{tab:fits} for fitted values and thresholds.
+In this section, we present and discuss the result of applying our proposed inactivity threshold identification analysis to the datsets.  First we start off with the common, simple cluster fits.  Then we move to more complicated fits and discuss the implications of additional clusters.  Finally, we demonstrate datasets with less suitable fits and discuss what this implies about the nature of participation in these systems.  Reference table~\ref{tab:fits} for fitted values and thresholds.
 
 \subsection{Simple bimodal fits}
 Most of the datasets of user-initiated inter-activity times that we observed display a simple bimodal distribution when their histograms are plotted on a logarithmically scaled X axis.  Figure~\ref{fig:bimodal_clusters} plots a log inter-activity time histogram overlaid with expectation maximization fits of a mixture of two log-normal cluster components.  Notably, the AOL search logs represent one of the most clear fits to this bimodal distribution.  This suggests that, counter to Mehrzadi \& Feitelson's conclusions~\cite{mehrzadi2012onextracting}, there does seem to to be a clear location for an inactivity cutoff in this dataset -- at approximately one hour.
@@ -21,16 +20,13 @@ Also of note in these results is the spike of probability of a 24 hour inter-act
 
 In some cases, we found that the data were fit better by adding a third component to the mixture model that represents very low frequency events.  Figure~\ref{fig:trimodal_clusters} shows the fits for the inter-activity time between OpenStreetMap's changesets and English Wikipedia edits.  Note that, like the bimodal fits above, we again see modes for the \emph{within-session} cluster around one minute and modes for the \emph{between-session} cluster around one day.  However, we found that we could more cleanly fit these datasets with an additional cluster with a mode of around 2.5 months.
 
-% FIXME: this label ends up referring to the parent subsection, not the figure
-% itself, thus it shows up as "Figure 4.3" in the text.  Don't know how to fix.
-% FIXME: same issue with the LoL and Stack Overflow figures, btw.
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{figures/trimodal_clusters.pdf}
-\label{fig:trimodal_clusters}
 \caption{
     \textbf{Trimodal clusters.} Empirical inter-activity density (bars) and fitted mixture models of gaussians are plotted for datasets where an additional, ``break'' cluster was needed to fit the data.
 }
+\label{fig:trimodal_clusters}
 \end{figure}
 
 As we noted in~\cite{geiger2013using}, we believe that this low frequency cluster represents an extended break from contributing that corresponds to a life event -- like getting married, buying a house, going to school or getting a job.  Wikipedia editors refer to this phenomena in volunteer participation as a ``wikibreak''\footnote{\url{https://en.wikipedia.org/wiki/Wikipedia:Wikibreak}}.  We suspect that the reason for the tiny scale of this cluster is two-fold: (1) contributors who work on Wikipedia or OpenStreetMap for long enough to to take an extended break are rare compared to other, higher frequency activity and (2) breaks often result in total abandonment of participation in the project.
@@ -42,20 +38,20 @@ Given that this component occurs at shorter intervals than the within-session co
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{figures/operation_mixed_clusters.pdf}
-\label{fig:operation_mixed_clusters}
 \caption{
     \textbf{High frequency activity clusters.} Empirical inter-activity density (bars) and fitted mixture models of gaussians are plotted for datasets where an additional, high-frequency inter-activity cluster was needed to fit the data.
 }
+\label{fig:operation_mixed_clusters}
 \end{figure}
 
 \subsection{Unusual fits}
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{figures/weird_lol_clusters.pdf}
-\label{fig:lol_game_clusters}
 \caption{
     \textbf{Inter-game clusters.} Empirical inter-activity density (bars) and fitted mixture models of gaussians are plotted for time between League of Legends games.
 }
+\label{fig:lol_game_clusters}
 \end{figure}
 While the fits described so far follow a clear pattern with somewhat minor nuance as to the nature of the gaussian fitting strategy, the other datasets we observed suggest that the this strategy for identifying session thresholds is not universally suitable for all user-intiated events.
 
@@ -68,10 +64,10 @@ There also may be constraints inherent to the system which limit the potential t
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{figures/weird_so_clusters.pdf}
-\label{fig:stack_overflow_clusters}
 \caption{
     \textbf{Low frequency clusters.} Empirical inter-activity density (bars) and (non-convergent) fitted mixture models of gaussians are plotted for time between posts on Stack Overflow.
 }
+\label{fig:stack_overflow_clusters}
 \end{figure}
 Unlike the other datasets observed, the time between Stack Overflow posts does not suggest a clear valley from which to draw intuition about where to draw a session cutoff.  Figure \ref{fig:stack_overflow_clusters} shows the (non-convergent) fits of question asking and answering activities.  In this case, there is a dramatic reduction in the scale of the higher frequency time components and what appears to be a shift of the within-session component to the right.
 

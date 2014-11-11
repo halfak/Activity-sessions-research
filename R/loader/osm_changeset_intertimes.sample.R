@@ -13,7 +13,8 @@ load_osm_changeset_intertimes.sample = tsv_loader(
             user_id
         ]
         #hist(fast_changesets.by_user$count)
-        problematic_ids = fast_changesets.by_user[count > 2,]$user_id
-        changesets[!user_id %in% problematic_ids]
+        problematic_ids = fast_changesets.by_user[count > 10,]$user_id
+        #changesets[!user_id %in% problematic_ids]
+        changesets[intertime > 5]
     }
 )

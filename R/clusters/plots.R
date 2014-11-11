@@ -5,8 +5,8 @@ all_datasets = load_all_datasets(reload=T)
 source("clustering.R")
 
 plot_clusters_datasets(
-    all_datasets[c('aol search')],
-    clusters=c("within", "between"),
+    all_datasets[c('osm changeset')],
+    clusters=c("within", "between", "break"),
     split=c("within", "between")
 )
     
