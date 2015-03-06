@@ -36,5 +36,11 @@ halfaker2014user.arxiv.pdf: halfaker2014user.arxiv.tex $(figures) $(parts) \
 
 halfaker2014user.arxiv.tar.gz: halfaker2014user.arxiv.pdf sig-alternate.cls
 	tar -zcf halfaker2014user.arxiv.tar.gz \
-			halfaker2014user.arxiv.* sig-alternate.cls figures parts sections\
-			tables
+	         halfaker2014user.arxiv.* sig-alternate.cls figures parts sections\
+	         tables
+
+halfaker2014user.tar.gz: halfaker2014user.arxiv.pdf sig-alternate-2013.cls
+	tar -zcf halfaker2014user.tar.gz \
+	         halfaker2014user.tex sig-alternate-2013.cls figures parts sections\
+	         tables
+
